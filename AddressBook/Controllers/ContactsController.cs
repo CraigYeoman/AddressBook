@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using AddressBook.Data;
 using AddressBook.Models;
+
 
 namespace AddressBook.Controllers
 {
@@ -19,7 +22,9 @@ namespace AddressBook.Controllers
             _context = context;
         }
 
+        
         // GET: Contacts
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Contacts.Include(c => c.AppUser);
@@ -27,6 +32,7 @@ namespace AddressBook.Controllers
         }
 
         // GET: Contacts/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -46,6 +52,7 @@ namespace AddressBook.Controllers
         }
 
         // GET: Contacts/Create
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["AppUserID"] = new SelectList(_context.Users, "Id", "Id");
@@ -57,6 +64,7 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Id,AppUserID,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageData,ImageType")] Contact contact)
         {
             if (ModelState.IsValid)
@@ -70,6 +78,7 @@ namespace AddressBook.Controllers
         }
 
         // GET: Contacts/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -91,6 +100,7 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,AppUserID,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,Created,ImageData,ImageType")] Contact contact)
         {
             if (id != contact.Id)
@@ -123,6 +133,7 @@ namespace AddressBook.Controllers
         }
 
         // GET: Contacts/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Contacts == null)
@@ -144,6 +155,7 @@ namespace AddressBook.Controllers
         // POST: Contacts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Contacts == null)
