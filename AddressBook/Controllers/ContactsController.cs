@@ -79,7 +79,7 @@ namespace AddressBook.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageFile")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate,Address1,Address2,City,State,ZipCode,Email,PhoneNumber,ImageFile")] Contact contact, List<int> categoryList)
         {
 
             ModelState.Remove("AppUserId");
@@ -101,6 +101,15 @@ namespace AddressBook.Controllers
                 }
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
+
+                //loop over all of the selected categories
+                foreach (int categoryId in categoryList)
+                {
+                    //save each category selected to ContactCategories table. 
+                    await _addressBookService.AddContactToCategoryAsync(categoryId, contact.Id);
+                }
+                
+
                 return RedirectToAction(nameof(Index));
             }
            
