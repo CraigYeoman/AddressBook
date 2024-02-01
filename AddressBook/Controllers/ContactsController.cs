@@ -329,9 +329,10 @@ namespace AddressBook.Controllers
                 return NotFound();
             }
 
+            string appUserId = _userManager.GetUserId(User);
+
             var contact = await _context.Contacts
-                .Include(c => c.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                        .FirstOrDefaultAsync(m => m.Id == id && m.AppUserID == appUserId);
             if (contact == null)
             {
                 return NotFound();
@@ -346,17 +347,15 @@ namespace AddressBook.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Contacts == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Contacts'  is null.");
-            }
-            var contact = await _context.Contacts.FindAsync(id);
+            string appUserId = _userManager.GetUserId(User);
+
+            var contact = await _context.Contacts.FirstOrDefaultAsync(c=> c.Id == id && c.AppUserID == appUserId);
+            
             if (contact != null)
             {
                 _context.Contacts.Remove(contact);
-            }
-            
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }                  
             return RedirectToAction(nameof(Index));
         }
 
