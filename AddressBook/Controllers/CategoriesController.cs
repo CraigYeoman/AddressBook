@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using AddressBook.Data;
 using AddressBook.Models;
 using AddressBook.Models.ViewModel;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace AddressBook.Controllers
 {
@@ -17,17 +18,20 @@ namespace AddressBook.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailService;
 
-        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // GET: Categories
         [Authorize]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
             string appUserId = _userManager.GetUserId(User);
 
             var categories = await _context.Categories.Where(c => c.AppUserId == appUserId)
@@ -35,6 +39,50 @@ namespace AddressBook.Controllers
                 .ToListAsync();
 
             return View(categories);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EmailCategory(int id)
+        {
+            string appUserId = _userManager.GetUserId(User);
+            Category category = await _context.Categories
+                                    .Include(c => c.Contacts)
+                                    .FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == appUserId);
+            List<string> emails = category.Contacts.Select(c => c.Email).ToList();
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.Name,
+                EmailAddress = String.Join(";", emails),
+                Subject = $"Group Message: {category.Name}"
+            };
+
+            EmailCategoryVM model = new EmailCategoryVM()
+            {
+                Contacts = category.Contacts.ToList(),
+                EmailData = emailData
+            };
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> EmailCategory(EmailCategoryVM ecvm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Success: Email Sent" });
+                }
+                catch
+                {
+                    return RedirectToAction("Index", "Categories", new { swalMessage = "Error: Email Send Failed" });
+                }
+            }
+
+            return View(ecvm);
         }
 
         // GET: Categories/Details/5
