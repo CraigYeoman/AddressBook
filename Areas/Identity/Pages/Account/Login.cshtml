@@ -46,6 +46,14 @@
                 </div>
             </form>
         </section>
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input asp-for="Input.Email" type="hidden" value="addressbook546@gmail.com" />
+            <input asp-for="Input.Password" type="hidden" value="rkhHFnv-y9fvn2X" />
+            <div>
+                <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Guest Login</button>
+            </div>
+        </form>
     </div>
 </div>
 
